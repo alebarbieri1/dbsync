@@ -19,6 +19,5 @@ public class EntityStream implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private final String name;
 		private final String data;
-		private final List<Entity> entities;
 	}
 }
