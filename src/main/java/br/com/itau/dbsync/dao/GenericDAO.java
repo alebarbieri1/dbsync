@@ -133,7 +133,7 @@ public class GenericDAO extends JdbcDaoSupport {
 		}
 
 		int rowsAffected = this.getJdbcTemplate().update(connection -> {
-			PreparedStatement ps = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
+			PreparedStatement ps = connection.prepareStatement(sql.toString());
 
 			for (int i = 0; i < keys.size(); i++) {
 				// Columns being updated

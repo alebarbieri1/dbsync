@@ -1,5 +1,7 @@
 package br.com.itau.dbsync.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +19,7 @@ public class SyncController {
 	private SyncService service;
 
 	@PostMapping("/sync")
-	private ResponseEntity<Response> sync(@RequestBody EntityStream stream) {
+	private ResponseEntity<Response> sync(@RequestBody @Valid EntityStream stream) {
 		service.sync(stream);
 		return ResponseEntity.ok(Response.builder().message("Success").build());
 	}
