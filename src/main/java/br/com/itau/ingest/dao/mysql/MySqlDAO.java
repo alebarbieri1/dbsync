@@ -1,7 +1,9 @@
 package br.com.itau.ingest.dao.mysql;
 
 import java.math.BigInteger;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -52,37 +54,12 @@ class MySqlDAO extends JdbcDaoSupport implements GenericDAO {
 				keysSql.add(key);
 			}
 		}
-
-		List<String> values = new ArrayList<>(Collections.nCopies(keys.size(), "?"));
-
-		StringBuilder sql = new StringBuilder();
-		sql.append("INSERT INTO ").append(schema).append(".").append(entity.getName());
-		sql.append("(").append(String.join(",", keysSql)).append(") ");
-		sql.append("VALUES (").append(String.join(",", values)).append(")");
+		String insertStatement = generateInsertStatement(schema, entity.getName(), keysSql);
 
 		try {
 			int rowsAffected = this.getJdbcTemplate().update(connection -> {
-				PreparedStatement ps = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
-
-				for (int i = 0; i < keys.size(); i++) {
-					Object keyValue = json.get((String) keys.get(i));
-					String keyName = keys.get(i);
-					if (keyName.endsWith("_fk")) {
-						if (keyValue.equals(JSONObject.NULL)) {
-							ps.setLong(i + 1, foreignKeys.get(keyName.substring(0, keyName.length() - 3)));
-						} else {
-							ps.setLong(i + 1, (Integer) keyValue);
-						}
-					} else {
-						if (keyValue.equals(JSONObject.NULL)) {
-							ps.setNull(i + 1, Types.NULL);
-						} else if (keyValue instanceof Number) {
-							ps.setLong(i + 1, (Integer) keyValue);
-						} else if (keyValue instanceof String) {
-							ps.setString(i + 1, (String) keyValue);
-						}
-					}
-				}
+				PreparedStatement ps = createPreparedStatement(connection, insertStatement, true, keys, json,
+						foreignKeys);
 				return ps;
 			}, keyHolder);
 
@@ -121,46 +98,10 @@ class MySqlDAO extends JdbcDaoSupport implements GenericDAO {
 			}
 		}
 
-		StringBuilder sql = new StringBuilder();
-		sql.append("UPDATE ").append(schema).append(".").append(entity.getName());
-		sql.append(" SET ");
-		for (int i = 0; i < keysSql.size(); i++) {
-			if (i == keysSql.size() - 1) {
-				sql.append(keysSql.get(i)).append(" = ? ");
-				sql.append("WHERE ").append(primaryKeyColumn).append(" = ?");
-			} else {
-				sql.append(keysSql.get(i)).append(" = ?, ");
-			}
-		}
+		String updateStatement = generateUpdateStatement(schema, entity.getName(), keysSql, primaryKeyColumn);
 
 		int rowsAffected = this.getJdbcTemplate().update(connection -> {
-			PreparedStatement ps = connection.prepareStatement(sql.toString());
-
-			for (int i = 0; i < keys.size(); i++) {
-				// Columns being updated
-				Object keyValue = json.get((String) keys.get(i));
-				String keyName = keys.get(i);
-				if (keyName.endsWith("_fk")) {
-					if (keyValue.equals(JSONObject.NULL)) {
-						ps.setLong(i + 1, foreignKeys.get(keyName.substring(0, keyName.length() - 3)));
-					} else {
-						ps.setLong(i + 1, (Integer) keyValue);
-					}
-				} else {
-					if (keyValue instanceof Number) {
-						ps.setLong(i + 1, (Integer) keyValue);
-					} else if (keyValue instanceof String) {
-						ps.setString(i + 1, (String) keyValue);
-					} else {
-						ps.setNull(i + 1, Types.NULL);
-					}
-				}
-				// Where condition
-				if (keyName.endsWith("_pk")) {
-					ps.setLong(keys.size() + 1, (Integer) json.get(keyName));
-				}
-			}
-
+			PreparedStatement ps = createPreparedStatement(connection, updateStatement, false, keys, json, foreignKeys);
 			return ps;
 		});
 
@@ -168,6 +109,79 @@ class MySqlDAO extends JdbcDaoSupport implements GenericDAO {
 				primaryKeyValue);
 
 		return rowsAffected;
+	}
+
+	private PreparedStatement createPreparedStatement(Connection connection, String sqlStatement,
+			boolean returnGeneratedKeys, List<String> columnNames, JSONObject json, Map<String, Long> foreignKeys)
+			throws SQLException {
+		PreparedStatement ps = null;
+		if (returnGeneratedKeys) {
+			ps = connection.prepareStatement(sqlStatement, Statement.RETURN_GENERATED_KEYS);
+		} else {
+			ps = connection.prepareStatement(sqlStatement);
+		}
+
+		setPreparedStatementValues(ps, columnNames, json, foreignKeys, returnGeneratedKeys);
+
+		return ps;
+	}
+
+	private void setPreparedStatementValues(PreparedStatement ps, List<String> columnNames, JSONObject json,
+			Map<String, Long> foreignKeys, boolean returnGeneratedKeys) throws SQLException {
+
+		for (int i = 0; i < columnNames.size(); i++) {
+			Object keyValue = json.get((String) columnNames.get(i));
+			String keyName = columnNames.get(i);
+			if (keyName.endsWith("_fk")) {
+				if (keyValue.equals(JSONObject.NULL)) {
+					ps.setLong(i + 1, foreignKeys.get(keyName.substring(0, keyName.length() - 3)));
+				} else {
+					ps.setLong(i + 1, (Integer) keyValue);
+				}
+			} else {
+				if (keyValue.equals(JSONObject.NULL)) {
+					ps.setNull(i + 1, Types.NULL);
+				} else if (keyValue instanceof Number) {
+					ps.setLong(i + 1, (Integer) keyValue);
+				} else if (keyValue instanceof String) {
+					ps.setString(i + 1, (String) keyValue);
+				}
+			}
+
+			if (!returnGeneratedKeys) {
+				// Where condition
+				if (keyName.endsWith("_pk")) {
+					ps.setLong(columnNames.size() + 1, (Integer) json.get(keyName));
+				}
+			}
+		}
+	}
+
+	private String generateInsertStatement(String schema, String entityName, List<String> columnNames) {
+		List<String> values = new ArrayList<>(Collections.nCopies(columnNames.size(), "?"));
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("INSERT INTO ").append(schema).append(".").append(entityName);
+		sql.append("(").append(String.join(",", columnNames)).append(") ");
+		sql.append("VALUES (").append(String.join(",", values)).append(")");
+		return sql.toString();
+	}
+
+	private String generateUpdateStatement(String schema, String entityName, List<String> columnNames,
+			String primaryKeyColumn) {
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE ").append(schema).append(".").append(entityName);
+		sql.append(" SET ");
+		for (int i = 0; i < columnNames.size(); i++) {
+			if (i == columnNames.size() - 1) {
+				sql.append(columnNames.get(i)).append(" = ? ");
+				sql.append("WHERE ").append(primaryKeyColumn).append(" = ?");
+			} else {
+				sql.append(columnNames.get(i)).append(" = ?, ");
+			}
+		}
+		return sql.toString();
 	}
 
 	@PostConstruct
