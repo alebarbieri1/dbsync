@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.exception;
+package br.com.itau.ingest.exception;
 
 public class EntityAlreadyExistsException extends Exception {
 

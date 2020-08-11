@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.dao;
+package br.com.itau.ingest.dao.mysql;
 
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
@@ -20,13 +20,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import br.com.itau.dbsync.exception.EntityAlreadyExistsException;
-import br.com.itau.dbsync.model.EntityStream;
+import br.com.itau.ingest.dao.GenericDAO;
+import br.com.itau.ingest.exception.EntityAlreadyExistsException;
+import br.com.itau.ingest.model.EntityStream;
 import lombok.extern.slf4j.Slf4j;
 
 @Repository
 @Slf4j
-public class GenericDAO extends JdbcDaoSupport {
+class MySqlDAO extends JdbcDaoSupport implements GenericDAO {
 
 	@Autowired
 	private DataSource dataSource;
@@ -163,7 +164,8 @@ public class GenericDAO extends JdbcDaoSupport {
 			return ps;
 		});
 
-		log.info("{} row(s) affected for entity {} | update | [ID = {}]", rowsAffected, entity.getName(), primaryKeyValue);
+		log.info("{} row(s) affected for entity {} | update | [ID = {}]", rowsAffected, entity.getName(),
+				primaryKeyValue);
 
 		return rowsAffected;
 	}

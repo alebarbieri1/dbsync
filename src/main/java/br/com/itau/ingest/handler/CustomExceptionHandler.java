@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.handler;
+package br.com.itau.ingest.handler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.itau.dbsync.model.Response;
+import br.com.itau.ingest.model.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice

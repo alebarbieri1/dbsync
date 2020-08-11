@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.config;
+package br.com.itau.ingest.config;
 
 import javax.sql.DataSource;
 

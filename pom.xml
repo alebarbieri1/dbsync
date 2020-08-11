@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.com.itau</groupId>
-	<artifactId>dbsync</artifactId>
+	<artifactId>ingest-data-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>dbsync</name>
+	<name>ingest-data-service</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>

@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.controller;
+package br.com.itau.ingest.controller;
 
 import javax.validation.Valid;
 
@@ -8,19 +8,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.itau.dbsync.model.EntityStream;
-import br.com.itau.dbsync.model.Response;
-import br.com.itau.dbsync.service.SyncService;
+import br.com.itau.ingest.model.EntityStream;
+import br.com.itau.ingest.model.Response;
+import br.com.itau.ingest.service.IngestService;
 
 @RestController
-public class SyncController {
+public class IngestController {
 
 	@Autowired
-	private SyncService service;
+	private IngestService service;
 
-	@PostMapping("/sync")
+	@PostMapping("/ingest")
 	private ResponseEntity<Response> sync(@RequestBody @Valid EntityStream stream) {
-		service.sync(stream);
+		service.ingest(stream);
 		return ResponseEntity.ok(Response.builder().message("Success").build());
 	}
 }

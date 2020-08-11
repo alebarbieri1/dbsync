@@ -1,13 +1,13 @@
-package br.com.itau.dbsync;
+package br.com.itau.ingest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DbsyncApplication {
+public class IngestApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DbsyncApplication.class, args);
+		SpringApplication.run(IngestApplication.class, args);
 	}
 
 }

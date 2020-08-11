@@ -1,4 +1,4 @@
-package br.com.itau.dbsync.model;
+package br.com.itau.ingest.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
